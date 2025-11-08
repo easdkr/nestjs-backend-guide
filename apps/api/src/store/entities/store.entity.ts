@@ -17,3 +17,4 @@ export class Store {
   @Property({ nullable: true, type: 'time with time zone' })
   deletedAt: Date | null = null;
 }
+

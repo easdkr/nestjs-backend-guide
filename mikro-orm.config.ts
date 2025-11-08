@@ -3,14 +3,12 @@ import { Migrator } from '@mikro-orm/migrations';
 
 export default defineConfig({
   entities: ['./dist/**/*.entity.js'],
-  entitiesTs: ['./src/**/*.entity.ts'],
-  dbName: 'mikro-orm-playground',
-  clientUrl:
-    'postgresql://postgres:postgres@localhost:15432/mikro-orm-playground',
+  entitiesTs: ['./apps/api/src/**/*.entity.ts', './libs/**/*.entity.ts'],
+  dbName: 'commerce',
+  clientUrl: 'postgresql://postgres:postgres@localhost:15432/commerce',
   extensions: [Migrator],
   migrations: {
-    path: './src/migrations',
-    pathTs: './src/migrations',
+    pathTs: './migrations',
     glob: '!(*.d).{js,ts}',
     transactional: true,
     disableForeignKeys: false,

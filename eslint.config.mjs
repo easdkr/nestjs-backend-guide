@@ -30,6 +30,19 @@ export default tseslint.config(
       '@typescript-eslint/no-floating-promises': 'warn',
       '@typescript-eslint/no-unsafe-argument': 'warn',
       '@typescript-eslint/require-await': 'off',
+      'padding-line-between-statements': [
+        'error',
+        {
+          blankLine: 'always',
+          prev: 'import',
+          next: '*',
+        },
+        {
+          blankLine: 'any',
+          prev: 'import',
+          next: 'import',
+        },
+      ],
     },
   },
 );
