@@ -1,3 +1,4 @@
+import { ValkeyModule } from './valkey/valkey.module';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { Module, Logger } from '@nestjs/common';
@@ -11,6 +12,14 @@ import { Module, Logger } from '@nestjs/common';
       driver: PostgreSqlDriver,
       debug: true,
       logger: (msg) => new Logger('MikroORM').verbose(msg),
+    }),
+    ValkeyModule.forRoot({
+      host: 'localhost',
+      port: 16379,
+      connectTimeout: 10000,
+      commandTimeout: 10000,
+      retryStrategy: (times) => times * 100,
+      maxRetriesPerRequest: 10,
     }),
   ],
   exports: [],

@@ -1,0 +1,2 @@
+export const VALKEY_MODULE_OPTIONS = Symbol('VALKEY_MODULE_OPTIONS');
+
