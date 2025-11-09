@@ -11,6 +11,7 @@ import type { Response } from 'express';
 import { AuthService } from '../services/auth.service';
 import { LoginDto } from '../dto/login.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { RefreshTokenGuard } from '../guards/refresh-token.guard';
 import { CreateUserDto } from '@api/user/dto/create-user.dto';
 import { User } from '../decorators/user.decorator';
 import type { RequestUser } from '../../user/types/request-user.type';
@@ -60,6 +61,29 @@ export class AuthV1Controller {
     });
 
     return res.json({ message: '로그인되었습니다.' });
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(RefreshTokenGuard)
+  async refresh(@User() user: RequestUser, @Res() res: Response) {
+    const tokens = await this.authService.refresh(user.id);
+
+    res.cookie('accessToken', tokens.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 1000, // 1시간
+    });
+
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
+    });
+
+    return res.json({ message: '토큰이 갱신되었습니다.' });
   }
 
   @Post('logout')

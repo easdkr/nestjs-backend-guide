@@ -3,27 +3,25 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
 import type { Request } from 'express';
 import { AuthTokenStorage } from './auth-token.storage';
+import { JwtPayload } from './jwt.strategy';
 import { RequestUser } from '@api/user/types/request-user.type';
 
-export interface JwtPayload {
-  sub: number;
-  email: string;
-}
-
-const extractTokenFromCookieOrHeader = (req: Request): string | null => {
-  // 1. 쿠키에서 먼저 확인
-  if (req.cookies?.accessToken) {
-    return req.cookies.accessToken as string;
+const extractRefreshTokenFromCookie = (req: Request): string | null => {
+  if (req.cookies?.refreshToken) {
+    return req.cookies.refreshToken as string;
   }
 
   return null;
 };
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
+export class RefreshTokenStrategy extends PassportStrategy(
+  Strategy,
+  'refresh-token',
+) {
   constructor(private readonly authTokenStorage: AuthTokenStorage) {
     super({
-      jwtFromRequest: extractTokenFromCookieOrHeader,
+      jwtFromRequest: extractRefreshTokenFromCookie,
       ignoreExpiration: false,
       secretOrKey: process.env.JWT_SECRET || 'secret',
       passReqToCallback: true,
@@ -32,11 +30,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(req: Request, payload: JwtPayload): Promise<RequestUser> {
     const userId = payload.sub;
-    const token = extractTokenFromCookieOrHeader(req);
-    const storedToken = await this.authTokenStorage.getAccessToken(userId);
+    const token = extractRefreshTokenFromCookie(req);
+    const storedToken = await this.authTokenStorage.getRefreshToken(userId);
 
     if (!storedToken || !token || storedToken !== token) {
-      throw new UnauthorizedException('토큰이 만료되었거나 유효하지 않습니다.');
+      throw new UnauthorizedException(
+        '리프레시 토큰이 만료되었거나 유효하지 않습니다.',
+      );
     }
 
     return {

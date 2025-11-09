@@ -296,6 +296,117 @@ describe('AuthController (e2e)', () => {
     });
   });
 
+  describe('POST /v1/auth/refresh', () => {
+    const signupDto: CreateUserDto = {
+      email: 'refresh@example.com',
+      password: 'Refresh1234!',
+      nickname: 'refreshuser',
+      birthDate: '1990-01-01',
+      gender: Gender.MALE,
+      termsAgreed: true,
+      marketingAgreed: false,
+    };
+
+    let cookies: string[];
+
+    beforeAll(async () => {
+      const signupResponse = await request(app.getHttpServer())
+        .post('/v1/auth/signup')
+        .send(signupDto)
+        .expect(201);
+
+      const setCookieHeader = signupResponse.headers['set-cookie'];
+      cookies = Array.isArray(setCookieHeader)
+        ? setCookieHeader
+        : setCookieHeader
+          ? [setCookieHeader]
+          : [];
+    });
+
+    it('정상적인 토큰 갱신 요청', async () => {
+      // Act
+      const response = await request(app.getHttpServer())
+        .post('/v1/auth/refresh')
+        .set('Cookie', cookies)
+        .expect(HttpStatus.OK);
+
+      // Assert
+      expect(response.body.message).toBe('토큰이 갱신되었습니다.');
+      expect(response.headers['set-cookie']).toBeDefined();
+      const newCookies = response.headers['set-cookie'];
+      const cookieArray = Array.isArray(newCookies)
+        ? newCookies
+        : newCookies
+          ? [newCookies]
+          : [];
+      expect(
+        cookieArray.some((cookie: string) => cookie.includes('accessToken')),
+      ).toBe(true);
+      expect(
+        cookieArray.some((cookie: string) => cookie.includes('refreshToken')),
+      ).toBe(true);
+    });
+
+    it('리프레시 토큰 없이 갱신 시도', async () => {
+      // Act
+      const response = await request(app.getHttpServer())
+        .post('/v1/auth/refresh')
+        .expect(HttpStatus.UNAUTHORIZED);
+
+      // Assert
+      expect(response.body.message).toBeDefined();
+    });
+
+    it('유효하지 않은 리프레시 토큰으로 갱신 시도', async () => {
+      // Arrange
+      const invalidCookies = ['refreshToken=invalid-token'];
+
+      // Act
+      const response = await request(app.getHttpServer())
+        .post('/v1/auth/refresh')
+        .set('Cookie', invalidCookies)
+        .expect(HttpStatus.UNAUTHORIZED);
+
+      // Assert
+      expect(response.body.message).toBeDefined();
+    });
+
+    it('이미 로그아웃된 리프레시 토큰으로 갱신 시도', async () => {
+      // Arrange
+      const signupResponse = await request(app.getHttpServer())
+        .post('/v1/auth/signup')
+        .send({
+          ...signupDto,
+          email: 'refresh2@example.com',
+        })
+        .expect(HttpStatus.CREATED);
+
+      const setCookieHeader = signupResponse.headers['set-cookie'];
+      const signupCookies = Array.isArray(setCookieHeader)
+        ? setCookieHeader
+        : setCookieHeader
+          ? [setCookieHeader]
+          : [];
+
+      // Act - 로그아웃
+      await request(app.getHttpServer())
+        .post('/v1/auth/logout')
+        .set('Cookie', signupCookies)
+        .expect(HttpStatus.OK);
+
+      // Act - 로그아웃된 토큰으로 갱신 시도
+      const response = await request(app.getHttpServer())
+        .post('/v1/auth/refresh')
+        .set('Cookie', signupCookies)
+        .expect(HttpStatus.UNAUTHORIZED);
+
+      // Assert
+      expect(response.body.message).toContain(
+        '리프레시 토큰이 만료되었거나 유효하지 않습니다.',
+      );
+    });
+  });
+
   describe('POST /v1/auth/logout', () => {
     const signupDto: CreateUserDto = {
       email: 'logout@example.com',

@@ -49,4 +49,8 @@ export class AuthService {
   async logout(userId: number): Promise<void> {
     await this.authTokenStorage.deleteAllTokens(userId);
   }
+
+  async refresh(userId: number): Promise<TokenResponse> {
+    return await this.tokenGenerator.refresh(userId);
+  }
 }
