@@ -1,7 +1,7 @@
-import { ExcludeMethod } from '@libs/common/utils/types/constructors';
 import { Entity, PrimaryKey, Property } from '@mikro-orm/core';
 import bcrypt from 'bcrypt';
 import { Gender } from './gender.enum';
+import { UserCreationArgs } from './user-creation.args';
 
 @Entity()
 export class User {
@@ -38,17 +38,7 @@ export class User {
   @Property({ nullable: true, type: 'timestamp with time zone' })
   deletedAt: Date | null = null;
 
-  static of(
-    args: Omit<
-      ExcludeMethod<User>,
-      | 'id'
-      | 'createdAt'
-      | 'updatedAt'
-      | 'deletedAt'
-      | 'termsAgreed'
-      | 'marketingAgreed'
-    >,
-  ): User {
+  static of(args: UserCreationArgs): User {
     const user = new User();
     user.email = args.email;
     user.hashPassword(args.password);

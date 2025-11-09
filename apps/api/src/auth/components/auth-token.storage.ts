@@ -40,14 +40,14 @@ export class AuthTokenStorage {
     await this.valkeyClient.del(key);
   }
 
-  async deleteAllTokens(userId: number): Promise<void> {
+  async deleteAll(userId: number): Promise<void> {
     await Promise.all([
       this.deleteAccessToken(userId),
       this.deleteRefreshToken(userId),
     ]);
   }
 
-  async verifyToken(userId: number, token: string): Promise<boolean> {
+  async verify(userId: number, token: string): Promise<boolean> {
     const storedToken = await this.getAccessToken(userId);
     return storedToken === token;
   }
