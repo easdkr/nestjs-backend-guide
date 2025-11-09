@@ -1,12 +1,7 @@
 import { ExcludeMethod } from '@libs/common/utils/types/constructors';
 import { Entity, PrimaryKey, Property } from '@mikro-orm/core';
 import bcrypt from 'bcrypt';
-
-export enum Gender {
-  MALE = 'MALE',
-  FEMALE = 'FEMALE',
-  OTHER = 'OTHER',
-}
+import { Gender } from './gender.enum';
 
 @Entity()
 export class User {

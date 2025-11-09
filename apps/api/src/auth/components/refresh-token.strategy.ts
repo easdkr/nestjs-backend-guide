@@ -4,7 +4,7 @@ import { Strategy } from 'passport-jwt';
 import type { Request } from 'express';
 import { AuthTokenStorage } from './auth-token.storage';
 import { JwtPayload } from './jwt.strategy';
-import { RequestUser } from '@api/user/types/request-user.type';
+import { RequestUser } from '@api/user/core/request-user';
 
 const extractRefreshTokenFromCookie = (req: Request): string | null => {
   if (req.cookies?.refreshToken) {

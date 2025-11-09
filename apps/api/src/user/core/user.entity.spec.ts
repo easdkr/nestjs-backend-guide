@@ -1,4 +1,5 @@
-import { User, Gender } from './user.entity';
+import { User } from './user.entity';
+import { Gender } from './gender.enum';
 
 describe('User', () => {
   describe('of', () => {

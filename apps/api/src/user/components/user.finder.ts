@@ -1,4 +1,4 @@
-import { User } from '@api/user/entities/user.entity';
+import { User } from '@api/user/core/user.entity';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';

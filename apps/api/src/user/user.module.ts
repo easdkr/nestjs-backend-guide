@@ -1,6 +1,6 @@
 import { Module, Provider, Type } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
-import { User } from './entities/user.entity';
+import { User } from './core/user.entity';
 import { UserCreationValidator } from '@api/user/components/user-creation.validator';
 import { UserFinder } from '@api/user/components/user.finder';
 import { UserCreator } from '@api/user/components/user.creator';

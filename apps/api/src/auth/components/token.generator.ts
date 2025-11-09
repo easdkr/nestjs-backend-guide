@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { User } from '@api/user/entities/user.entity';
+import { User } from '@api/user/core/user.entity';
 import { JwtPayload } from './jwt.strategy';
 import { AuthTokenStorage } from './auth-token.storage';
 import { TokenResponse } from '../types/token-response.type';

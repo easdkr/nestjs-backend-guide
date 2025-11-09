@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { UserFinder } from '@api/user/components/user.finder';
-import { User } from '@api/user/entities/user.entity';
+import { User } from '@api/user/core/user.entity';
 import { UserService } from './user.service';
 
 describe('UserService', () => {

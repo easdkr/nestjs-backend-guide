@@ -14,7 +14,7 @@ import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { RefreshTokenGuard } from '../guards/refresh-token.guard';
 import { CreateUserDto } from '@api/user/dto/create-user.dto';
 import { User } from '../decorators/user.decorator';
-import type { RequestUser } from '../../user/types/request-user.type';
+import type { RequestUser } from '../../user/core/request-user';
 
 @Controller({ version: '1', path: 'auth' })
 export class AuthV1Controller {

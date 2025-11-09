@@ -1,5 +1,5 @@
 import { UserFinder } from '@api/user/components/user.finder';
-import { User } from '@api/user/entities/user.entity';
+import { User } from '@api/user/core/user.entity';
 import { Injectable, NotFoundException } from '@nestjs/common';
 
 @Injectable()

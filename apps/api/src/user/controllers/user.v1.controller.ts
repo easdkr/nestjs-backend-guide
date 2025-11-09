@@ -3,7 +3,7 @@ import { JwtAuthGuard } from '@api/auth/guards/jwt-auth.guard';
 import { UserResponseDto } from '../dto/user-response.dto';
 import { UserService } from '@api/user/services/user.service';
 import { User } from '@api/auth/decorators/user.decorator';
-import type { RequestUser } from '@api/user/types/request-user.type';
+import type { RequestUser } from '@api/user/core/request-user';
 
 @Controller({ version: '1', path: 'users' })
 export class UserV1Controller {

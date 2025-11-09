@@ -7,7 +7,7 @@ import {
 } from '../helpers/test-containers.helper';
 import { createTestAppModule } from '../helpers/test-app.module';
 import { createApp } from '@api/app.factory';
-import { Gender } from '@api/user/entities/user.entity';
+import { Gender } from '@api/user/core/gender.enum';
 import { CreateUserDto } from '@api/user/dto/create-user.dto';
 
 describe('UserController (e2e)', () => {

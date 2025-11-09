@@ -1,5 +1,5 @@
 import { CreateUserDto } from '@api/user/dto/create-user.dto';
-import { User } from '@api/user/entities/user.entity';
+import { User } from '@api/user/core/user.entity';
 import { EntityRepository, MikroORM, Transactional } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable } from '@nestjs/common';

@@ -1,4 +1,5 @@
-import { Gender, User } from '@api/user/entities/user.entity';
+import { Gender } from '@api/user/core/gender.enum';
+import { User } from '@api/user/core/user.entity';
 
 export class UserResponseDto {
   id: number;

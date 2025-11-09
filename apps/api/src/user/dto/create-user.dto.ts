@@ -8,7 +8,7 @@ import {
   IsBoolean,
   ValidateIf,
 } from 'class-validator';
-import { Gender } from '@api/user/entities/user.entity';
+import { Gender } from '@api/user/core/gender.enum';
 
 export class CreateUserDto {
   @IsEmail({}, { message: '올바른 이메일 형식이 아닙니다.' })
