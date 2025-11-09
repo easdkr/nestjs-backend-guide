@@ -6,7 +6,7 @@ import { UserCreator } from '@api/user/components/user.creator';
 import { UserCreationValidator } from '@api/user/components/user-creation.validator';
 import { CreateUserDto } from '@api/user/dto/create-user.dto';
 import { UserFinder } from '@api/user/components/user.finder';
-import { TokenResponse } from '../types/token-response.type';
+import { AuthToken } from '../core/auth-token';
 
 @Injectable()
 export class AuthService {
@@ -18,7 +18,7 @@ export class AuthService {
     private readonly authTokenStorage: AuthTokenStorage,
   ) {}
 
-  async signup(dto: CreateUserDto): Promise<TokenResponse> {
+  async signup(dto: CreateUserDto): Promise<AuthToken> {
     await this.userCreationValidator.validate({ email: dto.email });
 
     const user = await this.userCreator.create(dto);
@@ -26,7 +26,7 @@ export class AuthService {
     return this.tokenGenerator.generate(user);
   }
 
-  async login(dto: LoginDto): Promise<TokenResponse> {
+  async login(dto: LoginDto): Promise<AuthToken> {
     const user = await this.userFinder.findByEmail(dto.email);
 
     if (!user) {
@@ -50,7 +50,7 @@ export class AuthService {
     await this.authTokenStorage.deleteAll(userId);
   }
 
-  async refresh(userId: number): Promise<TokenResponse> {
+  async refresh(userId: number): Promise<AuthToken> {
     const user = await this.userFinder.findById(userId);
 
     if (!user || !user.isActive()) {

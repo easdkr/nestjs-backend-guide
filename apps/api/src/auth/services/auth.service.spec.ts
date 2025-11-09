@@ -10,7 +10,7 @@ import { CreateUserDto } from '@api/user/dto/create-user.dto';
 import { LoginDto } from '../dto/login.dto';
 import { User } from '@api/user/core/user.entity';
 import { Gender } from '@api/user/core/gender.enum';
-import { TokenResponse } from '../types/token-response.type';
+import { AuthToken } from '../core/auth-token';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -99,7 +99,7 @@ describe('AuthService', () => {
       user.email = createUserDto.email;
       user.nickname = createUserDto.nickname;
 
-      const tokenResponse: TokenResponse = {
+      const tokenResponse: AuthToken = {
         accessToken: 'access-token',
         refreshToken: 'refresh-token',
       };
@@ -164,7 +164,7 @@ describe('AuthService', () => {
       user.deletedAt = null;
       user.verifyPassword = jest.fn().mockReturnValue(true);
 
-      const tokenResponse: TokenResponse = {
+      const tokenResponse: AuthToken = {
         accessToken: 'access-token',
         refreshToken: 'refresh-token',
       };
@@ -280,7 +280,7 @@ describe('AuthService', () => {
       user.email = 'test@example.com';
       user.deletedAt = null;
 
-      const tokenResponse: TokenResponse = {
+      const tokenResponse: AuthToken = {
         accessToken: 'new-access-token',
         refreshToken: 'new-refresh-token',
       };

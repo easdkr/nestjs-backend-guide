@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { User } from '@api/user/core/user.entity';
 import { JwtPayload } from './jwt.strategy';
 import { AuthTokenStorage } from './auth-token.storage';
-import { TokenResponse } from '../types/token-response.type';
+import { AuthToken } from '../core/auth-token';
 
 @Injectable()
 export class TokenGenerator {
@@ -12,7 +12,7 @@ export class TokenGenerator {
     private readonly authTokenStorage: AuthTokenStorage,
   ) {}
 
-  async generate(user: User): Promise<TokenResponse> {
+  async generate(user: User): Promise<AuthToken> {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
@@ -30,7 +30,7 @@ export class TokenGenerator {
     };
   }
 
-  async refresh(user: User): Promise<TokenResponse> {
+  async refresh(user: User): Promise<AuthToken> {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
