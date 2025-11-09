@@ -51,8 +51,15 @@ describe('AuthController (e2e)', () => {
         .expect(201);
 
       // Assert
-      expect(response.body).toHaveProperty('accessToken');
-      expect(response.body).toHaveProperty('refreshToken');
+      expect(response.body).toHaveProperty('message');
+      expect(response.headers['set-cookie']).toBeDefined();
+      const cookies = response.headers['set-cookie'];
+      expect(
+        cookies.some((cookie: string) => cookie.includes('accessToken')),
+      ).toBe(true);
+      expect(
+        cookies.some((cookie: string) => cookie.includes('refreshToken')),
+      ).toBe(true);
     });
 
     it('중복 이메일 가입 시도', async () => {
@@ -208,8 +215,15 @@ describe('AuthController (e2e)', () => {
         .expect(HttpStatus.CREATED);
 
       // Assert
-      expect(response.body).toHaveProperty('accessToken');
-      expect(response.body).toHaveProperty('refreshToken');
+      expect(response.body).toHaveProperty('message');
+      expect(response.headers['set-cookie']).toBeDefined();
+      const cookies = response.headers['set-cookie'];
+      expect(
+        cookies.some((cookie: string) => cookie.includes('accessToken')),
+      ).toBe(true);
+      expect(
+        cookies.some((cookie: string) => cookie.includes('refreshToken')),
+      ).toBe(true);
     });
 
     it('존재하지 않는 이메일로 로그인 시도', async () => {
@@ -293,7 +307,7 @@ describe('AuthController (e2e)', () => {
       marketingAgreed: false,
     };
 
-    let accessToken: string;
+    let cookies: string[];
 
     beforeAll(async () => {
       const signupResponse = await request(app.getHttpServer())
@@ -301,14 +315,19 @@ describe('AuthController (e2e)', () => {
         .send(signupDto)
         .expect(201);
 
-      accessToken = signupResponse.body.accessToken;
+      const setCookieHeader = signupResponse.headers['set-cookie'];
+      cookies = Array.isArray(setCookieHeader)
+        ? setCookieHeader
+        : setCookieHeader
+          ? [setCookieHeader]
+          : [];
     });
 
     it('정상적인 로그아웃 요청', async () => {
       // Arrange
       const response = await request(app.getHttpServer())
         .post('/v1/auth/logout')
-        .set('Authorization', `Bearer ${accessToken}`)
+        .set('Cookie', cookies)
         .expect(HttpStatus.OK);
 
       // Assert
@@ -346,18 +365,23 @@ describe('AuthController (e2e)', () => {
         })
         .expect(HttpStatus.CREATED);
 
-      const token = signupResponse.body.accessToken;
+      const setCookieHeader = signupResponse.headers['set-cookie'];
+      const signupCookies = Array.isArray(setCookieHeader)
+        ? setCookieHeader
+        : setCookieHeader
+          ? [setCookieHeader]
+          : [];
 
       // Act
       await request(app.getHttpServer())
         .post('/v1/auth/logout')
-        .set('Authorization', `Bearer ${token}`)
+        .set('Cookie', signupCookies)
         .expect(HttpStatus.OK);
 
       // Act
       const response = await request(app.getHttpServer())
         .post('/v1/auth/logout')
-        .set('Authorization', `Bearer ${token}`)
+        .set('Cookie', signupCookies)
         .expect(HttpStatus.UNAUTHORIZED);
 
       // Assert

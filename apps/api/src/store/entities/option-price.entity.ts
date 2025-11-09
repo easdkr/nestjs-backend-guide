@@ -24,4 +24,3 @@ export class OptionPrice {
   @Property({ onUpdate: () => new Date() })
   updatedAt: Date = new Date();
 }
-

@@ -6,6 +6,7 @@ import {
   LogLevel,
   VersioningType,
 } from '@nestjs/common';
+import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 
 export async function createApp(
@@ -15,6 +16,8 @@ export async function createApp(
   const appOptions =
     options?.logger !== undefined ? { logger: options.logger } : undefined;
   const app = await NestFactory.create(module ?? AppModule, appOptions);
+
+  app.use(cookieParser());
 
   app.enableVersioning({
     type: VersioningType.URI,

@@ -14,9 +14,9 @@ export interface ValkeyModuleOptions {
 }
 
 export interface ValkeyModuleAsyncOptions {
-  useFactory?: (...args: any[]) => Promise<ValkeyModuleOptions> | ValkeyModuleOptions;
+  useFactory?: (
+    ...args: any[]
+  ) => Promise<ValkeyModuleOptions> | ValkeyModuleOptions;
   inject?: any[];
   imports?: any[];
 }
-
-

@@ -29,4 +29,3 @@ export class Option {
   @Property({ onUpdate: () => new Date() })
   updatedAt: Date = new Date();
 }
-
