@@ -26,7 +26,7 @@ describe('AuthController (e2e)', () => {
     await stopTestContainers();
   });
 
-  describe('POST /auth/signup', () => {
+  describe('POST /v1/auth/signup', () => {
     const baseSignupDto: CreateUserDto = {
       email: 'test@example.com',
       password: 'Test1234!',
@@ -46,7 +46,7 @@ describe('AuthController (e2e)', () => {
 
       // Act
       const response = await request(app.getHttpServer())
-        .post('/auth/signup')
+        .post('/v1/auth/signup')
         .send(dto)
         .expect(201);
 
@@ -64,13 +64,13 @@ describe('AuthController (e2e)', () => {
 
       // Act
       await request(app.getHttpServer())
-        .post('/auth/signup')
+        .post('/v1/auth/signup')
         .send(dto)
         .expect(201);
 
       // Act
       const response = await request(app.getHttpServer())
-        .post('/auth/signup')
+        .post('/v1/auth/signup')
         .send(dto)
         .expect(HttpStatus.CONFLICT);
 
@@ -87,7 +87,7 @@ describe('AuthController (e2e)', () => {
 
       // Act
       const response = await request(app.getHttpServer())
-        .post('/auth/signup')
+        .post('/v1/auth/signup')
         .send(invalidDto)
         .expect(HttpStatus.BAD_REQUEST);
 
@@ -105,7 +105,7 @@ describe('AuthController (e2e)', () => {
 
       // Act
       const response = await request(app.getHttpServer())
-        .post('/auth/signup')
+        .post('/v1/auth/signup')
         .send(invalidDto)
         .expect(HttpStatus.BAD_REQUEST);
 
@@ -125,7 +125,7 @@ describe('AuthController (e2e)', () => {
 
       // Act
       const response = await request(app.getHttpServer())
-        .post('/auth/signup')
+        .post('/v1/auth/signup')
         .send(invalidDto)
         .expect(HttpStatus.BAD_REQUEST);
 
@@ -145,7 +145,7 @@ describe('AuthController (e2e)', () => {
 
       // Act
       const response = await request(app.getHttpServer())
-        .post('/auth/signup')
+        .post('/v1/auth/signup')
         .send(invalidDto)
         .expect(HttpStatus.BAD_REQUEST);
 
@@ -165,7 +165,7 @@ describe('AuthController (e2e)', () => {
 
       // Act
       const response = await request(app.getHttpServer())
-        .post('/auth/signup')
+        .post('/v1/auth/signup')
         .send(invalidDto)
         .expect(HttpStatus.BAD_REQUEST);
 
@@ -189,7 +189,7 @@ describe('AuthController (e2e)', () => {
 
     beforeAll(async () => {
       await request(app.getHttpServer())
-        .post('/auth/signup')
+        .post('/v1/auth/signup')
         .send(signupDto)
         .expect(201);
     });
@@ -203,7 +203,7 @@ describe('AuthController (e2e)', () => {
 
       // Act
       const response = await request(app.getHttpServer())
-        .post('/auth/login')
+        .post('/v1/auth/login')
         .send(loginDto)
         .expect(HttpStatus.CREATED);
 
@@ -221,7 +221,7 @@ describe('AuthController (e2e)', () => {
 
       // Act
       const response = await request(app.getHttpServer())
-        .post('/auth/login')
+        .post('/v1/auth/login')
         .send(loginDto)
         .expect(HttpStatus.UNAUTHORIZED);
 
@@ -238,7 +238,7 @@ describe('AuthController (e2e)', () => {
 
       // Act
       const response = await request(app.getHttpServer())
-        .post('/auth/login')
+        .post('/v1/auth/login')
         .send(loginDto)
         .expect(HttpStatus.UNAUTHORIZED);
 
@@ -257,7 +257,7 @@ describe('AuthController (e2e)', () => {
 
       // Act
       const response = await request(app.getHttpServer())
-        .post('/auth/login')
+        .post('/v1/auth/login')
         .send(loginDto)
         .expect(HttpStatus.BAD_REQUEST);
 
@@ -273,7 +273,7 @@ describe('AuthController (e2e)', () => {
 
       // Act
       const response = await request(app.getHttpServer())
-        .post('/auth/login')
+        .post('/v1/auth/login')
         .send(loginDto)
         .expect(HttpStatus.BAD_REQUEST);
 
@@ -282,7 +282,7 @@ describe('AuthController (e2e)', () => {
     });
   });
 
-  describe('POST /auth/logout', () => {
+  describe('POST /v1/auth/logout', () => {
     const signupDto: CreateUserDto = {
       email: 'logout@example.com',
       password: 'Logout1234!',
@@ -297,7 +297,7 @@ describe('AuthController (e2e)', () => {
 
     beforeAll(async () => {
       const signupResponse = await request(app.getHttpServer())
-        .post('/auth/signup')
+        .post('/v1/auth/signup')
         .send(signupDto)
         .expect(201);
 
@@ -307,7 +307,7 @@ describe('AuthController (e2e)', () => {
     it('정상적인 로그아웃 요청', async () => {
       // Arrange
       const response = await request(app.getHttpServer())
-        .post('/auth/logout')
+        .post('/v1/auth/logout')
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(HttpStatus.OK);
 
@@ -318,7 +318,7 @@ describe('AuthController (e2e)', () => {
     it('인증 토큰 없이 로그아웃 시도', async () => {
       // Arrange
       const response = await request(app.getHttpServer())
-        .post('/auth/logout')
+        .post('/v1/auth/logout')
         .expect(HttpStatus.UNAUTHORIZED);
 
       // Assert
@@ -328,7 +328,7 @@ describe('AuthController (e2e)', () => {
     it('유효하지 않은 토큰으로 로그아웃 시도', async () => {
       // Arrange
       const response = await request(app.getHttpServer())
-        .post('/auth/logout')
+        .post('/v1/auth/logout')
         .set('Authorization', 'Bearer invalid-token')
         .expect(HttpStatus.UNAUTHORIZED);
 
@@ -339,7 +339,7 @@ describe('AuthController (e2e)', () => {
     it('이미 로그아웃된 토큰으로 로그아웃 시도', async () => {
       // Arrange
       const signupResponse = await request(app.getHttpServer())
-        .post('/auth/signup')
+        .post('/v1/auth/signup')
         .send({
           ...signupDto,
           email: 'logout2@example.com',
@@ -350,13 +350,13 @@ describe('AuthController (e2e)', () => {
 
       // Act
       await request(app.getHttpServer())
-        .post('/auth/logout')
+        .post('/v1/auth/logout')
         .set('Authorization', `Bearer ${token}`)
         .expect(HttpStatus.OK);
 
       // Act
       const response = await request(app.getHttpServer())
-        .post('/auth/logout')
+        .post('/v1/auth/logout')
         .set('Authorization', `Bearer ${token}`)
         .expect(HttpStatus.UNAUTHORIZED);
 

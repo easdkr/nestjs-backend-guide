@@ -4,6 +4,7 @@ import {
   ValidationPipe,
   Type,
   LogLevel,
+  VersioningType,
 } from '@nestjs/common';
 import { AppModule } from './app.module';
 
@@ -14,6 +15,13 @@ export async function createApp(
   const appOptions =
     options?.logger !== undefined ? { logger: options.logger } : undefined;
   const app = await NestFactory.create(module ?? AppModule, appOptions);
+
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: '1',
+    prefix: 'v',
+  });
+
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,

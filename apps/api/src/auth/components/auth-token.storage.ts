@@ -52,4 +52,3 @@ export class AuthTokenStorage {
     return storedToken === token;
   }
 }
-

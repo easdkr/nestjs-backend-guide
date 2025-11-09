@@ -16,4 +16,8 @@ export class UserFinder {
       .where({ email })
       .getSingleResult();
   }
+
+  async findById(id: number): Promise<User | null> {
+    return await this.userRepository.findOne({ id });
+  }
 }

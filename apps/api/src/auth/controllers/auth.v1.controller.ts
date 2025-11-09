@@ -5,16 +5,16 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
-  Req,
 } from '@nestjs/common';
-import { AuthService } from './services/auth.service';
-import { LoginDto } from './dto/login.dto';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import type { Request as ExpressRequest } from 'express';
+import { AuthService } from '../services/auth.service';
+import { LoginDto } from '../dto/login.dto';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { CreateUserDto } from '@api/user/dto/create-user.dto';
+import { User } from '../decorators/user.decorator';
+import type { RequestUser } from '../../user/types/request-user.type';
 
-@Controller('auth')
-export class AuthController {
+@Controller({ version: '1', path: 'auth' })
+export class AuthV1Controller {
   constructor(private readonly authService: AuthService) {}
 
   @Post('signup')
@@ -31,8 +31,8 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
-  async logout(@Req() req: ExpressRequest) {
-    await this.authService.logout(req.user.id);
+  async logout(@User() user: RequestUser) {
+    await this.authService.logout(user.id);
     return { message: '로그아웃되었습니다.' };
   }
 }

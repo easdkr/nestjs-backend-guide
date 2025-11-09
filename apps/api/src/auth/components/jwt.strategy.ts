@@ -1,9 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Request } from 'express';
 import { AuthTokenStorage } from './auth-token.storage';
+import { RequestUser } from '@api/user/types/request-user.type';
 
 export interface JwtPayload {
   sub: number;
@@ -21,7 +21,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(req: Request, payload: JwtPayload) {
+  async validate(req: Request, payload: JwtPayload): Promise<RequestUser> {
     const userId = payload.sub;
     const authHeader = req.headers.authorization;
     const token = authHeader?.replace('Bearer ', '');
