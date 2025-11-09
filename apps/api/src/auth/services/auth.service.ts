@@ -51,6 +51,12 @@ export class AuthService {
   }
 
   async refresh(userId: number): Promise<TokenResponse> {
-    return await this.tokenGenerator.refresh(userId);
+    const user = await this.userFinder.findById(userId);
+
+    if (!user || !user.isActive()) {
+      throw new UnauthorizedException('사용자를 찾을 수 없습니다.');
+    }
+
+    return await this.tokenGenerator.refresh(user);
   }
 }

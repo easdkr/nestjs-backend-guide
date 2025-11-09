@@ -95,7 +95,9 @@
     "coverageDirectory": "./coverage",
     "testEnvironment": "node",
     "moduleNameMapper": {
-      "^@backend-guide/(.*)$": "<rootDir>/libs/$1/src"
+      "^@backend-guide/(.*)$": "<rootDir>/libs/$1/src",
+      "^@api/(.*)$": "<rootDir>/apps/api/src/$1",
+      "^@libs/common/(.*)$": "<rootDir>/libs/common/src/$1"
     }
   }
 }
