@@ -3,6 +3,8 @@ import { Product } from '@api/store/core/product.entity';
 import { OptionGroup } from '@api/store/core/option-group.entity';
 import { Option } from '@api/store/core/option.entity';
 import { OptionPrice } from '@api/store/core/option-price.entity';
+import { Inventory } from '@api/store/core/inventory.entity';
+import { InventoryTransaction } from '@api/store/core/inventory-transaction.entity';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { Module } from '@nestjs/common';
 
@@ -14,6 +16,8 @@ import { Module } from '@nestjs/common';
       OptionGroup,
       Option,
       OptionPrice,
+      Inventory,
+      InventoryTransaction,
     ]),
   ],
   providers: [],
