@@ -1,0 +1,385 @@
+---
+description: NestJS + MikroORM 프로젝트 아키텍처 규칙
+globs: apps/**/*.ts, libs/**/*.ts
+alwaysApply: true
+---
+
+# 프로젝트 아키텍처 규칙
+
+## 1. 기술 스택
+
+- **프레임워크**: NestJS
+- **ORM**: MikroORM (PostgreSQL)
+- **캐시/세션**: Valkey (Redis 호환)
+
+---
+
+## 2. 디렉토리 구조
+
+### 2.1 전체 구조
+
+```
+apps/api/src/
+├── [domain]/
+│   ├── [domain].module.ts
+│   ├── core/
+│   │   ├── [domain].entity.ts
+│   │   ├── [domain]-creation.args.ts
+│   │   ├── [name].enum.ts
+│   │   └── [name].interface.ts
+│   ├── components/
+│   │   ├── [domain].creator.ts
+│   │   ├── [domain].finder.ts
+│   │   ├── [domain].validator.ts
+│   │   └── [domain].storage.ts
+│   ├── services/
+│   │   └── [domain].service.ts
+│   ├── controllers/
+│   │   └── [domain].v[N].controller.ts
+│   ├── dto/
+│   │   ├── create-[domain].dto.ts
+│   │   └── [domain]-response.dto.ts
+│   ├── guards/
+│   │   └── [name].guard.ts
+│   └── decorators/
+│       └── [name].decorator.ts
+libs/common/src/
+└── 공통 유틸리티, 모듈
+```
+
+### 2.2 폴더별 역할
+
+| 폴더           | 역할                                | 예시                                |
+| -------------- | ----------------------------------- | ----------------------------------- |
+| `core/`        | 엔티티, enum, 인터페이스, Args 타입 | `user.entity.ts`, `role.enum.ts`    |
+| `components/`  | 단일 책임 컴포넌트 (SRP)            | `user.creator.ts`, `user.finder.ts` |
+| `services/`    | 비즈니스 로직 조합                  | `user.service.ts`                   |
+| `controllers/` | HTTP 엔드포인트                     | `user.v1.controller.ts`             |
+| `dto/`         | 요청/응답 DTO                       | `create-user.dto.ts`                |
+| `guards/`      | 인증/인가 가드                      | `jwt-auth.guard.ts`                 |
+| `decorators/`  | 커스텀 데코레이터                   | `user.decorator.ts`                 |
+
+---
+
+## 3. 파일 네이밍 규칙
+
+### 3.1 컨벤션
+
+```
+[도메인].[역할].ts
+```
+
+### 3.2 예시
+
+| 파일 타입    | 네이밍 패턴                                        | 예시                                |
+| ------------ | -------------------------------------------------- | ----------------------------------- |
+| Entity       | `[domain].entity.ts`                               | `user.entity.ts`                    |
+| Module       | `[domain].module.ts`                               | `user.module.ts`                    |
+| Service      | `[domain].service.ts`                              | `user.service.ts`                   |
+| Controller   | `[domain].v[N].controller.ts`                      | `user.v1.controller.ts`             |
+| Component    | `[domain].[role].ts`                               | `user.finder.ts`, `user.creator.ts` |
+| Request DTO  | `create-[domain].dto.ts`, `update-[domain].dto.ts` | `create-user.dto.ts`                |
+| Response DTO | `[domain]-response.dto.ts`                         | `user-response.dto.ts`              |
+| Args         | `[domain]-creation.args.ts`                        | `user-creation.args.ts`             |
+| Enum         | `[name].enum.ts`                                   | `role.enum.ts`, `gender.enum.ts`    |
+| Guard        | `[name].guard.ts`                                  | `jwt-auth.guard.ts`                 |
+| Decorator    | `[name].decorator.ts`                              | `user.decorator.ts`                 |
+
+---
+
+## 4. 핵심 패턴
+
+### 4.1 Entity 패턴
+
+```typescript
+// core/[domain].entity.ts
+
+@Entity()
+export class User {
+  @PrimaryKey()
+  id: number;
+
+  // 속성들...
+
+  // ✅ 정적 팩토리 메서드 - 생성 로직 캡슐화
+  static of(args: UserCreationArgs): User {
+    const user = new User();
+    user.email = args.email;
+    // ... 초기화 로직
+    return user;
+  }
+
+  // ✅ 도메인 로직은 엔티티 내부에
+  verifyPassword(plainPassword: string): boolean {
+    return bcrypt.compareSync(plainPassword, this.password);
+  }
+
+  isActive(): boolean {
+    return this.deletedAt === null;
+  }
+
+  isAdmin(): boolean {
+    return this.role === Role.ADMIN;
+  }
+}
+```
+
+**규칙**:
+
+- `Entity.of(args)` 정적 팩토리 메서드로 생성
+- 도메인 로직은 엔티티 메서드로 캡슐화
+- getter로 계산된 속성 제공 (예: `get availableQuantity()`)
+
+### 4.2 Args 타입 패턴
+
+```typescript
+// core/[domain]-creation.args.ts
+
+export type UserCreationArgs = Omit<
+  ExcludeMethod<User>,
+  'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | '계산된속성들'
+>;
+```
+
+**규칙**:
+
+- 엔티티 생성에 필요한 인자만 추출
+- `ExcludeMethod`로 메서드 제외
+- 자동 생성 필드 제외 (`id`, `createdAt` 등)
+
+### 4.3 Component 패턴 (단일 책임)
+
+```typescript
+// components/[domain].finder.ts - 조회 담당
+@Injectable()
+export class UserFinder {
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: EntityRepository<User>,
+  ) {}
+
+  async findByEmail(email: string): Promise<User | null> { ... }
+  async findById(id: number): Promise<User | null> { ... }
+}
+
+// components/[domain].creator.ts - 생성 담당
+@Injectable()
+export class UserCreator {
+  @Transactional()
+  async create(dto: CreateUserDto): Promise<User> {
+    const user = User.of({ ... });
+    this.userRepository.getEntityManager().persist(user);
+    return user;
+  }
+}
+
+// components/[domain].validator.ts - 검증 담당
+@Injectable()
+export class UserCreationValidator {
+  async validate(args: { email: string }): Promise<void> {
+    // 검증 로직 및 예외 발생
+  }
+}
+```
+
+**Component 종류**:
+| 역할 | 네이밍 | 책임 |
+|------|--------|------|
+| Finder | `[domain].finder.ts` | 조회 (findBy*, findOne) |
+| Creator | `[domain].creator.ts` | 생성 (create) |
+| Validator | `[domain]-*.validator.ts`| 비즈니스 검증 |
+| Storage |`[domain].storage.ts` | 캐시/외부 저장소 |
+
+### 4.4 Service 패턴
+
+```typescript
+// services/[domain].service.ts
+
+@Injectable()
+export class AuthService {
+  constructor(
+    private readonly userCreationValidator: UserCreationValidator,
+    private readonly userCreator: UserCreator,
+    private readonly userFinder: UserFinder,
+    private readonly tokenGenerator: TokenGenerator,
+  ) {}
+
+  // Component들을 조합하여 비즈니스 플로우 구현
+  async signup(dto: CreateUserDto): Promise<AuthToken> {
+    await this.userCreationValidator.validate({ email: dto.email });
+    const user = await this.userCreator.create(dto);
+    return this.tokenGenerator.generate(user);
+  }
+}
+```
+
+**규칙**:
+
+- Service는 Component들을 조합
+- 직접 Repository를 사용하지 않음 (Component를 통해 접근)
+- 비즈니스 플로우 조정 역할
+
+### 4.5 DTO 패턴
+
+```typescript
+// dto/create-[domain].dto.ts - 요청 DTO
+export class CreateUserDto {
+  @IsEmail({}, { message: '올바른 이메일 형식이 아닙니다.' })
+  email: string;
+
+  @IsString()
+  @MinLength(8, { message: '패스워드는 최소 8자 이상이어야 합니다.' })
+  password: string;
+}
+
+// dto/[domain]-response.dto.ts - 응답 DTO
+export class UserResponseDto {
+  id: number;
+  email: string;
+  // ...
+
+  // ✅ 정적 from() 메서드로 변환
+  static from(user: User): UserResponseDto {
+    return {
+      id: user.id,
+      email: user.email,
+      // ...
+    };
+  }
+}
+```
+
+**규칙**:
+
+- 요청 DTO: `class-validator` 데코레이터로 검증
+- 응답 DTO: `static from(entity)` 메서드로 변환
+- 한글 에러 메시지 사용
+
+### 4.6 Controller 패턴
+
+```typescript
+// controllers/[domain].v1.controller.ts
+
+@Controller({ version: '1', path: 'users' })
+export class UserV1Controller {
+  constructor(private readonly userService: UserService) {}
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  async me(@User() user: RequestUser): Promise<UserResponseDto> {
+    return await this.userService.findOne(user.id).then(UserResponseDto.from);
+  }
+}
+```
+
+**규칙**:
+
+- 버전 관리: `{ version: '1', path: '...' }`
+- 파일명에 버전 포함: `[domain].v1.controller.ts`
+- Service만 주입 (Component 직접 사용 X)
+
+---
+
+## 5. Module 구조
+
+```typescript
+// [domain].module.ts
+
+const components: Provider[] = [UserFinder, UserCreationValidator, UserCreator];
+const services: Provider[] = [UserService];
+const controllers: Type<Controller>[] = [UserV1Controller];
+
+@Module({
+  imports: [MikroOrmModule.forFeature([User])],
+  controllers: [...controllers],
+  providers: [...components, ...services],
+  exports: [...components], // components는 다른 모듈에서 재사용 가능
+})
+export class UserModule {}
+```
+
+**규칙**:
+
+- `components`, `services`, `controllers` 배열로 분리 선언
+- Component는 export하여 다른 모듈에서 재사용
+- Service는 해당 모듈 내부에서만 사용
+
+---
+
+## 6. 금지 사항
+
+### ❌ 하지 말 것
+
+1. **Barrel 파일 생성 금지**
+
+   ```typescript
+   // ❌ index.ts로 re-export 금지
+   export * from './user.entity';
+   export * from './user.service';
+   ```
+
+2. **불필요한 try-catch 금지**
+   - NestJS 예외 필터가 처리함
+   - 특별한 복구 로직이 없으면 사용하지 않음
+
+3. **과도한 로깅 금지**
+   - 절대적으로 필요한 경우에만 로그 추가
+
+---
+
+## 7. 계층 의존성 규칙
+
+```
+Controller → Service → Component → Repository/Entity
+                ↘         ↘
+                 DTO       Args
+```
+
+| 계층       | 의존 가능                      | 의존 불가                     |
+| ---------- | ------------------------------ | ----------------------------- |
+| Controller | Service, DTO, Guard, Decorator | Component, Repository, Entity |
+| Service    | Component, DTO                 |                               |
+| Component  | Repository, Entity, Args       | Service                       |
+| Entity     | Args, Enum                     | 외부 의존성 없음              |
+
+---
+
+## 8. 인증/인가 패턴
+
+### 8.1 Guard 사용
+
+```typescript
+@Get('protected')
+@UseGuards(JwtAuthGuard)  // 인증
+async protectedRoute() { ... }
+
+@Get('admin-only')
+@UseGuards(JwtAuthGuard, RolesGuard)  // 인증 + 역할 검사
+@Roles(Role.ADMIN)
+async adminRoute() { ... }
+```
+
+### 8.2 사용자 정보 접근
+
+```typescript
+@Get('me')
+@UseGuards(JwtAuthGuard)
+async me(@User() user: RequestUser) {
+  // user.id, user.email, user.role 사용 가능
+}
+```
+
+---
+
+## 9. 트랜잭션 처리
+
+```typescript
+// Component에서 @Transactional() 데코레이터 사용
+@Injectable()
+export class UserCreator {
+  @Transactional()
+  async create(dto: CreateUserDto): Promise<User> {
+    // 트랜잭션 내에서 실행
+  }
+}
+```

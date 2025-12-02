@@ -1,0 +1,283 @@
+---
+description: 코딩 컨벤션 및 기본 규칙
+globs: apps/**/*.ts, libs/**/*.ts
+alwaysApply: true
+---
+
+# 코딩 컨벤션 및 기본 규칙
+
+## 1. 에러 핸들링 원칙
+
+### 1.1 기본 원칙
+
+- 에러는 **컴포넌트에서 던지고**, **상위 레벨(Controller)에서 처리**
+- 기본적으로는 프레임워크의 **기본 예외 클래스** 사용
+  - 커스텀 예외는 필요한 경우 추후 팀의 규약을 수립한 이후 사용
+
+```typescript
+// ✅ NestJS 기본 예외 클래스 사용
+throw new NotFoundException('리소스를 찾을 수 없습니다');
+throw new BadRequestException('잘못된 요청입니다');
+throw new UnauthorizedException('인증이 필요합니다');
+throw new ForbiddenException('권한이 없습니다');
+throw new ConflictException('이미 존재하는 리소스입니다');
+```
+
+### 1.2 try-catch 사용 규칙
+
+**하지 말 것**
+
+```typescript
+// Bad - 불필요한 중첩 try-catch
+async create(name: string): Promise<Store> {
+  try {
+    const result = await em.transactional(async () => {
+      try {
+        // 로직...
+      } catch (error) {
+        this.logger.error('Error inside transaction', error);
+        throw error;
+      }
+    });
+    return result;
+  } catch (error) {
+    this.logger.error('Error creating store', error);
+    throw error;
+  }
+}
+```
+
+**해야 할 것**
+
+```typescript
+// Good - 검증 로직에서 에러 던지기
+async create(name: string): Promise<Store> {
+  this.storeCreationValidator.validate(name);
+
+  return this.storeCreator.create(name).catch(async (error) => {
+    await this.storeCreationErrorHandler.handle(name, error);
+    throw error;
+  });
+}
+```
+
+### 1.3 catch() 체이닝 패턴
+
+에러 발생 시 **추가 비즈니스 로직**(실패 이벤트, 알림, 롤백 등)이 필요한 경우:
+
+```typescript
+// ErrorHandler 컴포넌트
+@Injectable()
+export class StoreCreationErrorHandler {
+  async handle(name: string, error: unknown): Promise<void> {
+    // 실패 이벤트 발행, 알림 전송 등
+  }
+}
+
+// Service에서 catch() 체이닝
+async create(name: string): Promise<Store> {
+  return this.storeCreator.create(name).catch(async (error) => {
+    await this.storeCreationErrorHandler.handle(name, error);
+    throw error;
+  });
+}
+```
+
+---
+
+## 2. 로깅 규칙
+
+### 2.1 기본 원칙
+
+- **의미 없는 로그 금지** - 노이즈만 증가시킴
+- **중복 로그 금지** - 같은 에러에 대해 여러 곳에서 로깅하지 않음
+- **필요한 경우 Exception Filter에서 일괄 처리**
+
+**하지 말 것**
+
+```typescript
+// Bad - 의미 없는 중복 로그
+async findById(id: number): Promise<Store> {
+  try {
+    const store = await this.storeRepository.findOne({ id });
+    if (!store) {
+      this.logger.error(`스토어를 찾을 수 없습니다. id: ${id}`);  // 로깅하고
+      throw new NotFoundException(`스토어를 찾을 수 없습니다.`);
+    }
+    return store;
+  } catch (error) {
+    this.logger.error(`스토어 조회 중 오류. id: ${id}`, error);  // 또 로깅하고
+    throw error;  // 그냥 던지기
+  }
+}
+```
+
+**해야 할 것**
+
+```typescript
+// Good - 깔끔하게 에러만 던지기
+async findById(id: number): Promise<Store> {
+  const store = await this.storeRepository.findOne({ id });
+
+  if (!store) {
+    throw new NotFoundException(`스토어를 찾을 수 없습니다. id: ${id}`);
+  }
+
+  return store;
+}
+```
+
+### 2.2 Exception Filter 활용
+
+로깅이나 응답 포맷팅이 필요한 경우 **Exception Filter** 사용:
+
+```typescript
+@Catch(HttpException)
+export class DomainExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(DomainExceptionFilter.name);
+
+  catch(exception: HttpException, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse<Response>();
+    const request = ctx.getRequest<Request>();
+    const status = exception.getStatus();
+
+    // 500번대 에러만 로깅
+    if (status >= 500) {
+      this.logger.error(`${request.method} ${request.url}`, exception.stack);
+    }
+
+    response.status(status).json({
+      code: status,
+      message: exception.message,
+      timestamp: new Date(),
+      path: request.url,
+    });
+  }
+}
+```
+
+---
+
+## 3. 중첩 깊이 규칙
+
+**최대 중첩 깊이: 3단계**
+
+### 3.1 Early Return 패턴
+
+```typescript
+//Bad - 4단계 중첩
+function getDiscount(user: User) {
+  if (user) {
+    if (user.isActive) {
+      if (user.isPremium) {
+        return 0.2;
+      }
+    }
+  }
+  return 0;
+}
+
+//Good - Early Return
+function getDiscount(user: User) {
+  if (!user) return 0;
+  if (!user.isActive) return 0;
+  if (!user.isPremium) return 0;
+  return 0.2;
+}
+```
+
+### 3.2 조건 통합
+
+```typescript
+//Bad
+if (user.isActive) {
+  if (user.age >= 18) {
+    if (user.hasVerifiedEmail) {
+      // 로직
+    }
+  }
+}
+
+//Good
+if (user.isActive && user.age >= 18 && user.hasVerifiedEmail) {
+  // 로직
+}
+```
+
+### 3.3 함수 추출
+
+```typescript
+//Bad - 깊은 중첩
+function processOrders(orders: Order[]) {
+  for (const order of orders) {
+    if (order.isPaid) {
+      for (const item of order.items) {
+        if (item.stock > 0) {
+          // 복잡한 로직
+        }
+      }
+    }
+  }
+}
+
+//Good - 함수로 분리
+function processOrders(orders: Order[]) {
+  orders.filter((o) => o.isPaid).forEach(processOrder);
+}
+
+function processOrder(order: Order) {
+  order.items.filter((i) => i.stock > 0).forEach(processItem);
+}
+```
+
+### 3.4 Continue/Break 활용
+
+```typescript
+// Bad
+for (const item of items) {
+  if (item.isValid) {
+    if (item.price > 100) {
+      // 처리
+    }
+  }
+}
+
+// Good
+for (const item of items) {
+  if (!item.isValid) continue;
+  if (item.price <= 100) continue;
+  // 처리
+}
+```
+
+---
+
+## 4. 금지 사항
+
+### 4.1 절대 금지
+
+| 항목                       | 이유                                 |
+| -------------------------- | ------------------------------------ |
+| **Barrel 파일 (index.ts)** | 순환 참조 문제, 빌드 성능 저하       |
+| **불필요한 try-catch**     | NestJS 예외 필터가 처리하는게 이상적 |
+| **의미 없는 로그**         | 노이즈 증가, 디버깅 어려움           |
+| **중첩 4단계 이상**        | 가독성 저하, 복잡도 증가             |
+
+### 4.2 커스텀 예외 클래스 사용 조건
+
+다음 경우에**만** 커스텀 예외 클래스 고려:
+
+- 여러 도메인에서 공통으로 사용되는 특수한 예외
+- 예외에 추가 메타데이터나 비즈니스 로직이 필요한 경우
+- 프로젝트 전반에 걸친 일관된 예외 처리 전략이 필요한 경우
+
+---
+
+## 5. 요약
+
+1. **에러는 컴포넌트에서 던지고, 상위에서 처리**
+2. **try-catch는 정말 필요한 경우에만**
+3. **로그는 Exception Filter에서 일괄 처리**
+4. **NestJS 기본 예외 클래스 사용**
+5. **중첩은 최대 3단계까지**
