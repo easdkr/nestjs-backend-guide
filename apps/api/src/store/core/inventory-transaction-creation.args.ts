@@ -47,4 +47,3 @@ export interface CreateAdjustmentTransactionArgs extends BaseTransactionArgs {
   /** 조정량 (양수: 증가, 음수: 감소) */
   adjustmentQuantity: number;
 }
-

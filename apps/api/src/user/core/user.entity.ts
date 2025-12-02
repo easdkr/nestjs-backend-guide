@@ -1,6 +1,7 @@
 import { Entity, PrimaryKey, Property } from '@mikro-orm/core';
 import bcrypt from 'bcrypt';
 import { Gender } from './gender.enum';
+import { Role } from './role.enum';
 import { UserCreationArgs } from './user-creation.args';
 
 @Entity()
@@ -22,6 +23,9 @@ export class User {
 
   @Property({ type: 'text' })
   gender: Gender;
+
+  @Property({ type: 'text', default: Role.USER })
+  role: Role = Role.USER;
 
   @Property({ nullable: true, type: 'timestamp with time zone' })
   termsAgreedAt: Date | null = null;
@@ -95,5 +99,13 @@ export class User {
 
   isActive(): boolean {
     return this.deletedAt === null;
+  }
+
+  isAdmin(): boolean {
+    return this.role === Role.ADMIN;
+  }
+
+  hasRole(role: Role): boolean {
+    return this.role === role;
   }
 }

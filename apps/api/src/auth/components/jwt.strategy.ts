@@ -4,10 +4,12 @@ import { Strategy } from 'passport-jwt';
 import type { Request } from 'express';
 import { AuthTokenStorage } from './auth-token.storage';
 import { RequestUser } from '@api/user/core/request-user';
+import type { Role } from '@api/user/core/role.enum';
 
 export interface JwtPayload {
   sub: number;
   email: string;
+  role: Role;
 }
 
 const extractTokenFromCookieOrHeader = (req: Request): string | null => {
@@ -42,6 +44,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     return {
       id: payload.sub,
       email: payload.email,
+      role: payload.role,
     };
   }
 }

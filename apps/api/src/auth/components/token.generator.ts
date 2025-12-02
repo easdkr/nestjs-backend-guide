@@ -16,6 +16,7 @@ export class TokenGenerator {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
+      role: user.role,
     };
 
     const accessToken = this.jwtService.sign(payload, { expiresIn: '1h' });
@@ -34,6 +35,7 @@ export class TokenGenerator {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
+      role: user.role,
     };
 
     const accessToken = this.jwtService.sign(payload, { expiresIn: '1h' });
