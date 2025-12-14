@@ -1,3 +1,4 @@
+import { AuthToken } from '@api/auth/core/auth-token';
 import {
   Injectable,
   NestInterceptor,
@@ -7,10 +8,9 @@ import {
 import type { Response } from 'express';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import type { TokenResponse } from '../types/token-response.type';
 
 interface AuthResponse {
-  tokens: TokenResponse;
+  tokens: AuthToken;
   message: string;
 }
 
@@ -32,7 +32,7 @@ export class AuthCookieInterceptor implements NestInterceptor {
     );
   }
 
-  private setAuthCookies(res: Response, tokens: TokenResponse): void {
+  private setAuthCookies(res: Response, tokens: AuthToken): void {
     const baseOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

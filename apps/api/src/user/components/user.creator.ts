@@ -3,6 +3,7 @@ import { User } from '@api/user/core/user.entity';
 import { EntityRepository, MikroORM, Transactional } from '@mikro-orm/core';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Injectable } from '@nestjs/common';
+import { Role } from '@api/user/core/role.enum';
 
 @Injectable()
 export class UserCreator {
@@ -15,6 +16,7 @@ export class UserCreator {
   @Transactional()
   async create(user: CreateUserDto) {
     const newUser = User.of({
+      role: Role.USER,
       email: user.email,
       password: user.password,
       nickname: user.nickname,
