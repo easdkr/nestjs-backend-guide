@@ -7,6 +7,12 @@ import { Inventory } from '@api/store/core/inventory.entity';
 import { InventoryTransaction } from '@api/store/core/inventory-transaction.entity';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { Module } from '@nestjs/common';
+import { StoreFinder } from './components/store.finder';
+import { ProductFinder } from './components/product.finder';
+import { ProductCreationValidator } from './components/product-creation.validator';
+import { ProductCreator } from './components/product.creator';
+import { ProductService } from './services/product.service';
+import { ProductV1Controller } from './controllers/product.v1.controller';
 
 @Module({
   imports: [
@@ -20,7 +26,14 @@ import { Module } from '@nestjs/common';
       InventoryTransaction,
     ]),
   ],
-  providers: [],
-  exports: [MikroOrmModule],
+  controllers: [ProductV1Controller],
+  providers: [
+    StoreFinder,
+    ProductFinder,
+    ProductCreationValidator,
+    ProductCreator,
+    ProductService,
+  ],
+  exports: [MikroOrmModule, StoreFinder, ProductFinder, ProductCreator],
 })
 export class StoreModule {}
