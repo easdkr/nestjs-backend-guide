@@ -7,6 +7,8 @@ import { AuthTokenStorage } from './components/auth-token.storage';
 import { JwtStrategy } from './components/jwt.strategy';
 import { RefreshTokenStrategy } from './components/refresh-token.strategy';
 import { TokenGenerator } from './components/token.generator';
+import { AuthCookieInterceptor } from './interceptors/auth-cookie.interceptor';
+import { ClearAuthCookieInterceptor } from './interceptors/clear-auth-cookie.interceptor';
 import { UserModule } from '@api/user/user.module';
 import { Controller } from '@nestjs/common/interfaces/controllers/controller.interface';
 
@@ -16,6 +18,10 @@ const components: Provider[] = [
   JwtStrategy,
   RefreshTokenStrategy,
   TokenGenerator,
+];
+const interceptors: Provider[] = [
+  AuthCookieInterceptor,
+  ClearAuthCookieInterceptor,
 ];
 const services: Provider[] = [AuthService];
 
@@ -29,7 +35,7 @@ const services: Provider[] = [AuthService];
     }),
   ],
   controllers: [...controllers],
-  providers: [...components, ...services],
+  providers: [...components, ...interceptors, ...services],
   exports: [...components],
 })
 export class AuthModule {}
